@@ -1,12 +1,20 @@
+import os 
+from dotenv import load_dotenv
+load_dotenv()
+
 from crewai import Agent
 from langchain_openai import ChatOpenAI
-from tools import FinancialDocumentTool
+from tools import read_data_tool, extract_metrics_tool, compute_risk_profile, compute_investment_score
+#For testing only
+from mockLLM import MockLLM
 
-### Initialize the LLM we will be using
-llm = ChatOpenAI(
-    model = "gpt-40-mini",
-    temperature=0.2
-)
+if os.getenv("OPENAI_API_KEY"):
+    llm = ChatOpenAI(
+        model = "gpt-4o-mini",
+        temperature=0.2
+    )
+else:
+    llm = MockLLM()
 
 #Defining a Document Verifier Agent
 #Confirms file is financial, Rejects non-financial PDFs
@@ -18,6 +26,7 @@ verifier = Agent(
         "You strictly verify whether a document contains financial statements,"
         "corporate disclosures, or accounting data."
     ),
+    tools = [read_data_tool],
     verbose = True,
     llm = llm,
     allow_delegation=False
@@ -31,7 +40,7 @@ financial_analyst=Agent(
         "You are a CFA-certified financial analyst. "
         "You perform structured financial analysis strictly using document data. "
     ),
-    tool=[FinancialDocumentTool.read_data_tool],
+    tools=[read_data_tool, extract_metrics_tool],
     verbose=True,
     llm=llm,
     allow_delegation=False  # Allow delegation to other specialists
@@ -45,6 +54,7 @@ risk_assessor = Agent(
         "You are a risk management expert focused on liquidity riks, leverage risk, "
         "operational risk, and market exposure."
     ),
+    tools=[extract_metrics_tool, compute_risk_profile],
     verbose = True,
     llm = llm,
     allow_delegation = False
@@ -60,6 +70,7 @@ investment_advisor = Agent(
         "You provide high-level strategic positioning insights "
         "based strictly on financial analysis and risk evaluation. "
     ),
+    tools = [extract_metrics_tool,compute_risk_profile,compute_investment_score],
     verbose = True,
     llm = llm, 
     allow_delegation= False
