@@ -20,3 +20,7 @@ numpy==1.26.4
 
 # Env
 python-dotenv==1.0.1
+
+#Caching
+redis>=5.0.0
+rq>=1.16.0
