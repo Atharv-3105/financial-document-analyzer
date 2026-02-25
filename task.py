@@ -1,7 +1,7 @@
 ## Importing libraries and files
 from crewai import Task
 from agents import financial_analyst, verifier, risk_assessor, investment_advisor
-from tools import FinancialDocumentTool
+from tools import read_data_tool, extract_metrics_tool, compute_risk_profile, compute_investment_score
 
 
 #=========Create task for document verification============
@@ -19,7 +19,7 @@ verification_task = Task(
         "Provide brief reasoning."
     ),
     agent=verifier,
-    tools=[FinancialDocumentTool.read_data_tool],
+    tools=[read_data_tool],
 )
 
 #=========Create task for analyzing financial document=============
@@ -55,7 +55,7 @@ analyze_financial_document = Task(
         "Do not include external references or speculative commentary."
     ),
     agent = financial_analyst,
-    tools = [FinancialDocumentTool.read_data_tool],
+    tools = [read_data_tool, extract_metrics_tool],
 )
 
 #==========Create task for Risk_Analysis==============
@@ -76,6 +76,8 @@ risk_task = Task(
         "4. Risk Summary"
     ),
     agent=risk_assessor,
+    tools = [extract_metrics_tool, compute_risk_profile],
+    context = [analyze_financial_document],
 )
 
 
@@ -98,4 +100,6 @@ investment_task = Task (
         "5. Disclaimer: Not Financial Advice"
     ),
     agent = investment_advisor,
+    tools = [compute_investment_score],
+    context = [analyze_financial_document, risk_task]
 )
